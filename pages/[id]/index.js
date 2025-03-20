@@ -8,10 +8,9 @@ export default function ShortUrl() {
   const router = useRouter();
   const { id } = router.query;
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(null);
   const [urlData, setUrlData] = useState(null);
   
-  // Fetch the URL data from our API
   useEffect(() => {
     if (!id) return;
     
@@ -29,65 +28,65 @@ export default function ShortUrl() {
       userAgent.includes('spider')
     );
     
-    // For demo purposes, handle the demo1 shortcode directly
-    if (id === 'demo1') {
-      setUrlData({
-        originalUrl: 'https://scontent-lax.cdninstagram.com/v/t1.15752-9/483756777_1067305745413222_1271431596689012493_n.png?stp=dst-png_s720x720&_nc_cat=101&ccb=1-7&_nc_sid=0024fc',
-        title: 'Demo Instagram Image'
-      });
-      setLoading(false);
-      
-      // If it's not a crawler, redirect to the original URL
-      if (!isCrawler) {
-        window.location.href = 'https://scontent-lax.cdninstagram.com/v/t1.15752-9/483756777_1067305745413222_1271431596689012493_n.png?stp=dst-png_s720x720&_nc_cat=101&ccb=1-7&_nc_sid=0024fc';
-      }
-      return;
-    }
-    
     // Fetch the URL data from our API
     fetch(`/api/url/${id}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('URL not found');
+      .then(response => response.json())
+      .then(result => {
+        if (!result.success) {
+          throw new Error(result.error || 'URL not found');
         }
-        return response.json();
-      })
-      .then(data => {
-        setUrlData(data);
+        
+        setUrlData(result.data);
         setLoading(false);
         
         // If it's not a crawler, redirect to the original URL
-        if (!isCrawler && data.originalUrl) {
-          window.location.href = data.originalUrl;
+        if (!isCrawler) {
+          window.location.href = result.data.originalUrl;
         }
       })
       .catch(err => {
         console.error('Error fetching URL data:', err);
-        setError(true);
+        setError(err.message);
         setLoading(false);
       });
   }, [id]);
   
-  // Show loading state
   if (loading) {
-    return <div className="container"><h1>Loading...</h1></div>;
+    return (
+      <div className="container" style={{
+        maxWidth: '800px',
+        margin: '0 auto',
+        padding: '20px',
+        fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif',
+      }}>
+        <h1>Loading...</h1>
+      </div>
+    );
   }
   
-  // Show error state
   if (error || !urlData) {
     return (
-      <div className="container">
-        <h1>URL not found</h1>
+      <div className="container" style={{
+        maxWidth: '800px',
+        margin: '0 auto',
+        padding: '20px',
+        fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif',
+      }}>
+        <h1>Error: {error || 'URL not found'}</h1>
         <p>
           <Link href="/create">
-            <a>Create a new shortened URL</a>
+            <a style={{
+              color: '#0070f3',
+              textDecoration: 'none',
+              fontWeight: 500,
+            }}>Create a new shortened URL</a>
           </Link>
         </p>
       </div>
     );
   }
   
-  const { originalUrl, title = 'Instagram Image' } = urlData;
+  const { originalUrl, title = 'Instagram Image', views = 0 } = urlData;
   
   // Add emojis to title
   const emojis = ["😱", "😲", "😮", "🔥", "⚡", "✨", "💥", "👀"];
@@ -95,42 +94,19 @@ export default function ShortUrl() {
   const randomEmojiIndex2 = Math.floor(Math.random() * emojis.length);
   const titleWithEmoji = `${emojis[randomEmojiIndex1]}${title}${emojis[randomEmojiIndex2]}`;
   
-  // Random description
-  const randomDescriptions = [
-    "Online Members",
-    "Active Users",
-    "People Online",
-    "Viewers Now",
-    "Live Viewers",
-    "Current Viewers"
-  ];
-
-  const randomNumbers = [
-    "1,350,350",
-    "2,456,789",
-    "3,789,123",
-    "1,234,567",
-    "987,654",
-    "2,345,678"
-  ];
-
-  const randomIndex = Math.floor(Math.random() * randomDescriptions.length);
-  const randomNumIndex = Math.floor(Math.random() * randomNumbers.length);
-  const description = `${randomNumbers[randomNumIndex]} ${randomDescriptions[randomIndex]}`;
-  
   return (
     <div>
       <Head>
         <meta charSet="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-        <meta name="description" content={description}/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <meta name="description" content={`View ${title} - Viewed ${views} times`}/>
         <meta name="keywords" content="instagram,image,photo"/>
         <title>{titleWithEmoji}</title>
         
         {/* Open Graph Meta Tags */}
         <meta property="og:type" content="article"/>
         <meta property="og:title" content={titleWithEmoji}/>
-        <meta property="og:description" content={description}/>
+        <meta property="og:description" content={`View ${title} - Viewed ${views} times`}/>
         <meta property="og:image" content={originalUrl}/>
         <meta property="og:image:type" content="image/jpeg"/>
         <meta property="og:image:width" content="650"/>
@@ -139,13 +115,31 @@ export default function ShortUrl() {
         {/* Twitter Card Meta Tags */}
         <meta name="twitter:card" content="summary_large_image"/>
         <meta name="twitter:title" content={titleWithEmoji}/>
-        <meta name="twitter:description" content={description}/>
+        <meta name="twitter:description" content={`View ${title} - Viewed ${views} times`}/>
         <meta name="twitter:image" content={originalUrl}/>
       </Head>
 
-      <div className="container">
-        <h1>{titleWithEmoji}</h1>
-        <p>
+      <div className="container" style={{
+        maxWidth: '800px',
+        margin: '0 auto',
+        padding: '20px',
+        fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif',
+      }}>
+        <h1 style={{
+          fontSize: '2rem',
+          marginBottom: '1rem',
+          textAlign: 'center',
+        }}>{titleWithEmoji}</h1>
+        <p style={{
+          textAlign: 'center',
+          color: '#666',
+          marginBottom: '2rem',
+        }}>Viewed {views} times</p>
+        <div style={{
+          borderRadius: '8px',
+          overflow: 'hidden',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        }}>
           <Image 
             src={originalUrl}
             alt={title}
@@ -155,6 +149,18 @@ export default function ShortUrl() {
             className="img-responsive"
             unoptimized={true}
           />
+        </div>
+        <p style={{
+          textAlign: 'center',
+          marginTop: '2rem',
+        }}>
+          <Link href="/create">
+            <a style={{
+              color: '#0070f3',
+              textDecoration: 'none',
+              fontWeight: 500,
+            }}>Create your own shortened URL</a>
+          </Link>
         </p>
       </div>
     </div>
