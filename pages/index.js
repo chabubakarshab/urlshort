@@ -1,101 +1,205 @@
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import Head from 'next/head';
-import Image from 'next/image';
-import { useRouter } from 'next/router';
+import { GraphQLClient, gql } from 'graphql-request';
 
-export default function Home() {
-  const router = useRouter();
-  const { title = 'Instagram Image', imageUrl } = router.query;
+export async function getStaticProps() {
+  const endpoint = "https://wyseducation.xyz/graphql";
+  const graphQLClient = new GraphQLClient(endpoint);
   
-  // Default image if none provided
-  const defaultImage = 'https://scontent-lax.cdninstagram.com/v/t1.15752-9/483756777_1067305745413222_1271431596689012493_n.png?stp=dst-png_s720x720&_nc_cat=101&ccb=1-7&_nc_sid=0024fc&_nc_ohc=LUc7Oh1AtJcQ7kNvgFGQr77&_nc_oc=AdnikH6JZOcAvmOi_LhYU1_CgpiR221IYuryd3sKgAZBqLt6f8VNbY5Va5GAFEJFqk0&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.flhe42-1.fna&oh=03_Q7cD1wHmnUTPWWO98Si1TJa4ugHZkkAN5gB-LazJg-fxaR9vUg&oe=68022012';
-  
-  // Use provided image URL or default
-  const displayImageUrl = imageUrl || defaultImage;
-  
-  // Add emojis to title
-  const emojis = ["😱", "😲", "😮", "🔥", "⚡", "✨", "💥", "👀"];
-  const randomEmojiIndex1 = Math.floor(Math.random() * emojis.length);
-  const randomEmojiIndex2 = Math.floor(Math.random() * emojis.length);
-  const titleWithEmoji = `${emojis[randomEmojiIndex1]}${title}${emojis[randomEmojiIndex2]}`;
-  
-  // Random description
-  const randomDescriptions = [
-    "Online Members",
-    "Active Users",
-    "People Online",
-    "Viewers Now",
-    "Live Viewers",
-    "Current Viewers"
-  ];
+  const query = gql`
+    {
+      posts(first: 10) {
+        nodes {
+          id
+          title
+          excerpt
+          slug
+          date
+          featuredImage {
+            node {
+              sourceUrl
+              altText
+            }
+          }
+        }
+      }
+    }
+  `;
 
-  const randomNumbers = [
-    "1,350,350",
-    "2,456,789",
-    "3,789,123",
-    "1,234,567",
-    "987,654",
-    "2,345,678"
-  ];
+  try {
+    const data = await graphQLClient.request(query);
+    return {
+      props: {
+        posts: data.posts.nodes,
+      },
+      revalidate: 60, // Re-generate the page every 60 seconds if needed
+    };
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    return {
+      props: {
+        posts: [],
+      },
+      revalidate: 60,
+    };
+  }
+}
 
-  const randomIndex = Math.floor(Math.random() * randomDescriptions.length);
-  const randomNumIndex = Math.floor(Math.random() * randomNumbers.length);
-  const description = `${randomNumbers[randomNumIndex]} ${randomDescriptions[randomIndex]}`;
+export default function Home({ posts }) {
+  const [showCreateButton, setShowCreateButton] = useState(false);
+
+  useEffect(() => {
+    // Show the create button after the page loads instead of redirecting
+    setShowCreateButton(true);
+  }, []);
   
+  // Helper function to remove HTML tags from excerpt
+  const removeTags = (str) => {
+    if (str === null || str === '') return '';
+    else str = str.toString();
+    return str.replace(/(<([^>]+)>)/gi, '').replace(/\[[^\]]*\]/, '');
+  };
+
   return (
-    <div>
+    <div style={styles.container}>
       <Head>
-        <meta charSet="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-        <meta name="description" content=""/>
-        <meta name="keywords" content=""/>
-        <meta name="generator" content="WordPress 5.3.2"/>
-        <title>{titleWithEmoji}</title>
-        
-        <meta property="al:android:package" content="https://www.facebook.com/profile.php/"/>
-        <meta name="twitter:app:id:googleplay" content="https://www.facebook.com/profile.php/"/>
-        <meta property="al:android:app_name" content="Facebook"/>
-        <meta name="twitter:app:name:googleplay" content="Facebook"/>
-        <meta name="theme-color" content="#563d7c"/>
-        
-        {/* Facebook App ID */}
-        <meta property="fb:app_id" content="87741124305"/>
-        
-        {/* Open Graph Meta Tags */}
-        <meta property="og:type" content="article"/>
-        <meta property="og:title" content={titleWithEmoji}/>
-        <meta property="og:description" content={description}/>
-        
-        {/* Image meta tags with direct Instagram CDN URL */}
-        {displayImageUrl && (
-          <>
-            <meta property="og:image" content={displayImageUrl}/>
-            <meta property="og:image:type" content="image/jpeg"/>
-            <meta property="og:image:width" content="650"/>
-            <meta property="og:image:height" content="366"/>
-            
-            {/* Twitter Card Meta Tags */}
-            <meta name="twitter:card" content="summary_large_image"/>
-            <meta name="twitter:description" content={description}/>
-            <meta name="twitter:image" content={displayImageUrl}/>
-          </>
-        )}
+        <title>WordPress Posts | URL Shortener</title>
+        <meta name="description" content="View WordPress posts and create shortened URLs" />
       </Head>
-
-      <div className="container">
-        <h1>{titleWithEmoji}</h1>
-        {displayImageUrl && (
-          <p>
-            <Image 
-              src={displayImageUrl}
-              alt={title}
-              width={650}
-              height={366}
-              layout="responsive"
-              className="img-responsive"
-            />
-          </p>
+      
+      <main style={styles.main}>
+        <h1 style={styles.title}>WordPress Posts</h1>
+        
+        {showCreateButton && (
+          <Link href="/create" style={styles.createLink}>
+            <div style={styles.createButton}>
+              Create Shortened URL
+            </div>
+          </Link>
         )}
-      </div>
+
+        {posts && posts.length > 0 ? (
+          <div style={styles.postsGrid}>
+            {posts.map((post) => (
+              <Link 
+                href={`/${post.slug}`} 
+                key={post.id}
+                style={styles.postCard}
+              >
+                <div>
+                  {post.featuredImage?.node && (
+                    <div style={styles.imageContainer}>
+                      <img 
+                        src={post.featuredImage.node.sourceUrl} 
+                        alt={post.featuredImage.node.altText || post.title}
+                        style={styles.postImage}
+                      />
+                    </div>
+                  )}
+                  <h2 style={styles.postTitle}>{post.title}</h2>
+                  <div style={styles.postExcerpt}>{removeTags(post.excerpt)}</div>
+                  <p style={styles.postDate}>
+                    {new Date(post.date).toLocaleDateString()}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p style={styles.noPostsMessage}>No posts found. Check back later!</p>
+        )}
+      </main>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    padding: '0 0.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif',
+  },
+  main: {
+    padding: '5rem 0',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: '1200px',
+  },
+  title: {
+    margin: '0 0 2rem 0',
+    lineHeight: 1.15,
+    fontSize: '2.5rem',
+    textAlign: 'center',
+    color: '#333',
+  },
+  createLink: {
+    textDecoration: 'none',
+    marginBottom: '2rem',
+  },
+  createButton: {
+    padding: '0.8rem 1.5rem',
+    backgroundColor: '#0070f3',
+    color: 'white',
+    borderRadius: '5px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s',
+  },
+  postsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '2rem',
+    width: '100%',
+  },
+  postCard: {
+    border: '1px solid #eaeaea',
+    borderRadius: '10px',
+    padding: '1.5rem',
+    textDecoration: 'none',
+    color: 'inherit',
+    transition: 'color 0.15s ease, border-color 0.15s ease, transform 0.2s ease',
+    cursor: 'pointer',
+    transform: 'translateY(0)',
+  },
+  imageContainer: {
+    width: '100%',
+    height: '200px',
+    overflow: 'hidden',
+    borderRadius: '5px',
+    marginBottom: '1rem',
+  },
+  postImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  postTitle: {
+    margin: '0 0 0.5rem 0',
+    fontSize: '1.5rem',
+    color: '#0070f3',
+  },
+  postExcerpt: {
+    margin: '0',
+    fontSize: '1rem',
+    lineHeight: '1.5',
+    color: '#666',
+  },
+  postDate: {
+    fontSize: '0.8rem',
+    color: '#999',
+    marginTop: '1rem',
+  },
+  noPostsMessage: {
+    color: '#666',
+    fontSize: '1.2rem',
+    textAlign: 'center',
+  },
+};
