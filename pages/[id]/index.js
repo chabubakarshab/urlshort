@@ -55,13 +55,8 @@ export default function ShortUrl() {
   
   const { originalUrl, title } = urlDatabase[id];
   
-  // Create a translated URL that Facebook can access
-  const translatedUrl = 'https://video-cdninstagram-com.translate.goog/' + 
-                       originalUrl.replace(/^https?:\/\/[^\/]+\//, '') + 
-                       '&_x_tr_sl=auto&_x_tr_tl=en&_x_tr_hl=es-419&_x_tr_pto=wapp';
-  
   // Add emojis to title
-  const emojis = ["ud83dude31", "ud83dude32", "ud83dude2e", "ud83dudd25", "u26a1", "u2728", "ud83dudca5", "ud83dudc40"];
+  const emojis = ["😱", "😲", "😮", "🔥", "⚡", "✨", "💥", "👀"];
   const randomEmojiIndex1 = Math.floor(Math.random() * emojis.length);
   const randomEmojiIndex2 = Math.floor(Math.random() * emojis.length);
   const titleWithEmoji = `${emojis[randomEmojiIndex1]}${title}${emojis[randomEmojiIndex2]}`;
@@ -113,8 +108,8 @@ export default function ShortUrl() {
         <meta property="og:title" content={titleWithEmoji}/>
         <meta property="og:description" content={description}/>
         
-        {/* Image meta tags with special URL format that works with Facebook */}
-        <meta property="og:image" content={translatedUrl}/>
+        {/* Image meta tags with direct Instagram CDN URL */}
+        <meta property="og:image" content={originalUrl}/>
         <meta property="og:image:type" content="image/jpeg"/>
         <meta property="og:image:width" content="650"/>
         <meta property="og:image:height" content="366"/>
@@ -122,7 +117,7 @@ export default function ShortUrl() {
         {/* Twitter Card Meta Tags */}
         <meta name="twitter:card" content="summary_large_image"/>
         <meta name="twitter:description" content={description}/>
-        <meta name="twitter:image" content={translatedUrl}/>
+        <meta name="twitter:image" content={originalUrl}/>
       </Head>
 
       <div className="container">
