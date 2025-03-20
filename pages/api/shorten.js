@@ -1,5 +1,9 @@
 // This is a simple API endpoint to create shortened URLs
-// In a real application, you would store this in a database
+// In a production environment, you would use a database instead of in-memory storage
+
+// In-memory database to store shortened URLs
+// This will be reset when the server restarts
+let urlDatabase = {};
 
 // Generate a random short code
 function generateShortCode(length = 6) {
@@ -11,11 +15,23 @@ function generateShortCode(length = 6) {
   return result;
 }
 
-// Mock database of shortened URLs
-let urlDatabase = {};
+// Add some demo entries to the database
+urlDatabase['demo1'] = {
+  originalUrl: 'https://scontent-lax.cdninstagram.com/v/t1.15752-9/483756777_1067305745413222_1271431596689012493_n.png?stp=dst-png_s720x720&_nc_cat=101&ccb=1-7&_nc_sid=0024fc',
+  title: 'Demo Instagram Image',
+  createdAt: new Date().toISOString()
+};
 
 export default function handler(req, res) {
-  // Only allow POST requests
+  // Handle GET request to retrieve all shortened URLs
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      success: true,
+      data: urlDatabase
+    });
+  }
+  
+  // Only allow POST requests for creating new shortened URLs
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -41,7 +57,7 @@ export default function handler(req, res) {
   // Generate a short code
   const shortCode = generateShortCode();
   
-  // Store in our mock database
+  // Store in our database
   urlDatabase[shortCode] = {
     originalUrl: url,
     title: title || 'Instagram Image',
@@ -51,7 +67,7 @@ export default function handler(req, res) {
   // Get the base URL
   const baseUrl = process.env.VERCEL_URL 
     ? `https://${process.env.VERCEL_URL}` 
-    : `http://${req.headers.host}`;
+    : `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`;
   
   // Return the shortened URL
   return res.status(200).json({
