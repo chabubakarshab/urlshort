@@ -1,23 +1,21 @@
-# Instagram Image Shortener for Facebook
+# Instagram URL Shortener
 
-This is a Next.js application that creates shortened URLs for Instagram CDN images. When these shortened URLs are shared on Facebook, the images are displayed using Facebook's own CDN, which helps bypass content filters and prevents posts from being removed.
+This is a Next.js application that creates shortened URLs for Instagram CDN images. The shortened URLs display the original Instagram CDN images directly when shared.
 
 ## Features
 
 - Create shortened URLs for Instagram CDN images
-- Special meta tags optimized for Facebook's crawler
+- Meta tags optimized for social media sharing
 - Random elements to make each post look unique
-- Bypasses Facebook's content filters
 - Works with Instagram CDN URLs
+- Simple, easy-to-use interface
 
 ## How It Works
 
 1. You provide an Instagram CDN URL
 2. The application creates a shortened URL
-3. When Facebook crawls this URL, it sees special meta tags
-4. Facebook processes the image and creates its own CDN link
-5. The image appears to be coming directly from Facebook's CDN
-6. Regular users who click the link are redirected to the original Instagram image
+3. When the shortened URL is shared, it displays the original Instagram CDN image
+4. Regular users who click the link are redirected to the original Instagram image
 
 ## Deployment
 
@@ -50,7 +48,7 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 2. Enter an Instagram CDN URL
 3. Click "Create Shortened URL"
 4. Copy the shortened URL
-5. Share it on Facebook
+5. Share it wherever you want
 
 ## Example
 
@@ -59,10 +57,9 @@ Here's an example of how to use the application:
 1. Find an Instagram image URL (must contain cdninstagram.com, fbcdn.net, or scontent)
 2. Go to `https://your-vercel-app.vercel.app/create`
 3. Enter the URL and click "Create Shortened URL"
-4. Share the shortened URL on Facebook
+4. Share the shortened URL
 
 ## Notes
 
 - This application only works with Instagram CDN URLs
 - The shortened URLs are stored in memory and will be lost when the server restarts (in a production environment, you would use a database)
-- The application includes random elements to make each post look unique to Facebook
