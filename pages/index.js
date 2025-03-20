@@ -12,12 +12,6 @@ export default function Home() {
   // Use provided image URL or default
   const displayImageUrl = imageUrl || defaultImage;
   
-  // Create a translated URL that Facebook can access
-  const translatedUrl = displayImageUrl ? 
-    'https://video-cdninstagram-com.translate.goog/' + 
-    displayImageUrl.replace(/^https?:\/\/[^\/]+\//, '') + 
-    '&_x_tr_sl=auto&_x_tr_tl=en&_x_tr_hl=es-419&_x_tr_pto=wapp' : '';
-  
   // Add emojis to title
   const emojis = ["😱", "😲", "😮", "🔥", "⚡", "✨", "💥", "👀"];
   const randomEmojiIndex1 = Math.floor(Math.random() * emojis.length);
@@ -71,10 +65,10 @@ export default function Home() {
         <meta property="og:title" content={titleWithEmoji}/>
         <meta property="og:description" content={description}/>
         
-        {/* Image meta tags with special URL format that works with Facebook */}
-        {translatedUrl && (
+        {/* Image meta tags with direct Instagram CDN URL */}
+        {displayImageUrl && (
           <>
-            <meta property="og:image" content={translatedUrl}/>
+            <meta property="og:image" content={displayImageUrl}/>
             <meta property="og:image:type" content="image/jpeg"/>
             <meta property="og:image:width" content="650"/>
             <meta property="og:image:height" content="366"/>
@@ -82,7 +76,7 @@ export default function Home() {
             {/* Twitter Card Meta Tags */}
             <meta name="twitter:card" content="summary_large_image"/>
             <meta name="twitter:description" content={description}/>
-            <meta name="twitter:image" content={translatedUrl}/>
+            <meta name="twitter:image" content={displayImageUrl}/>
           </>
         )}
       </Head>
