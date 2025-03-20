@@ -1,23 +1,17 @@
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-
-// This is a mock database of shortened URLs
-// In a real application, you would fetch this from a database
-const urlDatabase = {
-  'demo1': {
-    originalUrl: 'https://scontent-lax.cdninstagram.com/v/t1.15752-9/483756777_1067305745413222_1271431596689012493_n.png?stp=dst-png_s720x720&_nc_cat=101&ccb=1-7&_nc_sid=0024fc&_nc_ohc=LUc7Oh1AtJcQ7kNvgFGQr77&_nc_oc=AdnikH6JZOcAvmOi_LhYU1_CgpiR221IYuryd3sKgAZBqLt6f8VNbY5Va5GAFEJFqk0&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.flhe42-1.fna&oh=03_Q7cD1wHmnUTPWWO98Si1TJa4ugHZkkAN5gB-LazJg-fxaR9vUg&oe=68022012',
-    title: 'Demo Instagram Image'
-  },
-  // Add more entries as needed
-};
+import Link from 'next/link';
 
 export default function ShortUrl() {
   const router = useRouter();
   const { id } = router.query;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [urlData, setUrlData] = useState(null);
   
-  // Check if we're running on the client and if this is a bot
+  // Fetch the URL data from our API
   useEffect(() => {
     if (!id) return;
     
@@ -35,25 +29,65 @@ export default function ShortUrl() {
       userAgent.includes('spider')
     );
     
-    // If it's not a crawler, redirect to the original URL
-    if (!isCrawler && urlDatabase[id]) {
-      window.location.href = urlDatabase[id].originalUrl;
+    // For demo purposes, handle the demo1 shortcode directly
+    if (id === 'demo1') {
+      setUrlData({
+        originalUrl: 'https://scontent-lax.cdninstagram.com/v/t1.15752-9/483756777_1067305745413222_1271431596689012493_n.png?stp=dst-png_s720x720&_nc_cat=101&ccb=1-7&_nc_sid=0024fc',
+        title: 'Demo Instagram Image'
+      });
+      setLoading(false);
+      
+      // If it's not a crawler, redirect to the original URL
+      if (!isCrawler) {
+        window.location.href = 'https://scontent-lax.cdninstagram.com/v/t1.15752-9/483756777_1067305745413222_1271431596689012493_n.png?stp=dst-png_s720x720&_nc_cat=101&ccb=1-7&_nc_sid=0024fc';
+      }
+      return;
     }
+    
+    // Fetch the URL data from our API
+    fetch(`/api/url/${id}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('URL not found');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setUrlData(data);
+        setLoading(false);
+        
+        // If it's not a crawler, redirect to the original URL
+        if (!isCrawler && data.originalUrl) {
+          window.location.href = data.originalUrl;
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching URL data:', err);
+        setError(true);
+        setLoading(false);
+      });
   }, [id]);
   
-  // If ID doesn't exist in our database, show error
-  if (id && !urlDatabase[id]) {
-    return <div className="container"><h1>URL not found</h1></div>;
-  }
-  
-  // If we're still here, it means it's a crawler or the page is still loading
-  // Show the special meta tags for crawlers
-  
-  if (!id || !urlDatabase[id]) {
+  // Show loading state
+  if (loading) {
     return <div className="container"><h1>Loading...</h1></div>;
   }
   
-  const { originalUrl, title } = urlDatabase[id];
+  // Show error state
+  if (error || !urlData) {
+    return (
+      <div className="container">
+        <h1>URL not found</h1>
+        <p>
+          <Link href="/create">
+            <a>Create a new shortened URL</a>
+          </Link>
+        </p>
+      </div>
+    );
+  }
+  
+  const { originalUrl, title = 'Instagram Image' } = urlData;
   
   // Add emojis to title
   const emojis = ["😱", "😲", "😮", "🔥", "⚡", "✨", "💥", "👀"];
@@ -89,26 +123,14 @@ export default function ShortUrl() {
       <Head>
         <meta charSet="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-        <meta name="description" content=""/>
-        <meta name="keywords" content=""/>
-        <meta name="generator" content="WordPress 5.3.2"/>
+        <meta name="description" content={description}/>
+        <meta name="keywords" content="instagram,image,photo"/>
         <title>{titleWithEmoji}</title>
-        
-        <meta property="al:android:package" content="https://www.facebook.com/profile.php/"/>
-        <meta name="twitter:app:id:googleplay" content="https://www.facebook.com/profile.php/"/>
-        <meta property="al:android:app_name" content="Facebook"/>
-        <meta name="twitter:app:name:googleplay" content="Facebook"/>
-        <meta name="theme-color" content="#563d7c"/>
-        
-        {/* Facebook App ID */}
-        <meta property="fb:app_id" content="87741124305"/>
         
         {/* Open Graph Meta Tags */}
         <meta property="og:type" content="article"/>
         <meta property="og:title" content={titleWithEmoji}/>
         <meta property="og:description" content={description}/>
-        
-        {/* Image meta tags with direct Instagram CDN URL */}
         <meta property="og:image" content={originalUrl}/>
         <meta property="og:image:type" content="image/jpeg"/>
         <meta property="og:image:width" content="650"/>
@@ -116,6 +138,7 @@ export default function ShortUrl() {
         
         {/* Twitter Card Meta Tags */}
         <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:title" content={titleWithEmoji}/>
         <meta name="twitter:description" content={description}/>
         <meta name="twitter:image" content={originalUrl}/>
       </Head>
@@ -130,6 +153,7 @@ export default function ShortUrl() {
             height={366}
             layout="responsive"
             className="img-responsive"
+            unoptimized={true}
           />
         </p>
       </div>
