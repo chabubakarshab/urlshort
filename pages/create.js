@@ -40,12 +40,12 @@ export default function Create() {
   return (
     <div className="container">
       <Head>
-        <title>Create Shortened URL</title>
+        <title>Instagram URL Shortener</title>
         <meta name="description" content="Create a shortened URL for Instagram images" />
       </Head>
       
-      <h1>Create Shortened URL</h1>
-      <p>Enter an Instagram CDN URL to create a shortened link that works on Facebook.</p>
+      <h1>Instagram URL Shortener</h1>
+      <p>Enter an Instagram CDN URL to create a shortened link.</p>
       
       <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
         <div style={{ marginBottom: '1rem' }}>
@@ -116,32 +116,23 @@ export default function Create() {
             </a>
           </p>
           <p>
-            <strong>Instructions:</strong>
-          </p>
-          <ol>
-            <li>Copy the short URL above</li>
-            <li>Paste it into Facebook to share</li>
-            <li>Facebook will display the image using its own CDN</li>
-            <li>This helps bypass Facebook's content filters</li>
-          </ol>
-          
-          <p>
-            <a 
-              href={`https://developers.facebook.com/tools/debug/?q=${encodeURIComponent(result.shortUrl)}`}
-              target="_blank" 
-              rel="noopener noreferrer"
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(result.shortUrl);
+                alert('URL copied to clipboard!');
+              }}
               style={{
-                display: 'inline-block',
                 padding: '0.5rem 1rem',
-                backgroundColor: '#4267B2',
+                backgroundColor: '#28a745',
                 color: 'white',
+                border: 'none',
                 borderRadius: '4px',
-                textDecoration: 'none',
+                cursor: 'pointer',
                 marginTop: '1rem'
               }}
             >
-              Test with Facebook Debugger
-            </a>
+              Copy URL to Clipboard
+            </button>
           </p>
         </div>
       )}
@@ -149,11 +140,9 @@ export default function Create() {
       <div style={{ marginTop: '3rem' }}>
         <h2>How It Works</h2>
         <ol>
-          <li>You provide an Instagram CDN URL</li>
-          <li>We create a special page with meta tags optimized for Facebook</li>
-          <li>When Facebook crawls your shortened URL, it sees these special meta tags</li>
-          <li>Facebook processes the image and creates its own CDN link</li>
-          <li>This makes the image appear to be coming directly from Facebook's CDN</li>
+          <li>Enter an Instagram CDN URL</li>
+          <li>We create a shortened URL for your image</li>
+          <li>When shared, the image will be displayed directly from Instagram's CDN</li>
           <li>Regular users who click the link are redirected to the original Instagram image</li>
         </ol>
       </div>
