@@ -5,21 +5,35 @@
 import { getUrlDatabase } from '../shorten';
 
 export default function handler(req, res) {
-  // Only allow GET requests
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  
   const { id } = req.query;
-  
-  // Get the URL database
   const urlDatabase = getUrlDatabase();
-  
-  // Check if the ID exists in the database
-  if (!urlDatabase[id]) {
-    return res.status(404).json({ error: 'URL not found' });
+
+  // Handle GET request to fetch URL data
+  if (req.method === 'GET') {
+    // Check if the URL exists
+    if (!urlDatabase[id]) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'URL not found' 
+      });
+    }
+
+    // Increment view count
+    urlDatabase[id].views = (urlDatabase[id].views || 0) + 1;
+
+    // Return URL data
+    return res.status(200).json({
+      success: true,
+      data: {
+        shortCode: id,
+        ...urlDatabase[id]
+      }
+    });
   }
-  
-  // Return the URL data
-  return res.status(200).json(urlDatabase[id]);
+
+  // Method not allowed
+  return res.status(405).json({ 
+    success: false, 
+    error: 'Method not allowed' 
+  });
 }
