@@ -18,9 +18,13 @@ export const getServerSideProps = async (ctx) => {
   if (isFacebookBot) {
     // Let the Facebook bot access our page to see the meta tags
     console.log('Facebook bot detected, serving meta tags');
+    // Add debugging to help troubleshoot
+    console.log('User Agent:', userAgent);
+    console.log('Path:', path);
   } 
   // Regular redirects for normal users from Facebook
   else if (referringURL?.includes('facebook.com') || fbclid) {
+    console.log('User coming from Facebook, redirecting to original URL');
     return {
       redirect: {
         permanent: false,
@@ -74,6 +78,7 @@ export const getServerSideProps = async (ctx) => {
         host: ctx.req.headers.host,
         absoluteUrl: `https://${ctx.req.headers.host}/${path}`,
         isFacebookBot,
+        fbclid,
       },
     };
   } catch (error) {
@@ -84,7 +89,7 @@ export const getServerSideProps = async (ctx) => {
   }
 };
 
-const Post = ({ post, host, path, absoluteUrl, isFacebookBot }) => {
+const Post = ({ post, host, path, absoluteUrl, isFacebookBot, fbclid }) => {
   // to remove tags from excerpt
   const removeTags = (str) => {
     if (str === null || str === '') return '';
@@ -100,6 +105,12 @@ const Post = ({ post, host, path, absoluteUrl, isFacebookBot }) => {
     let fullUrl = url;
     if (!url.startsWith('http')) {
       fullUrl = `https:${url}`;
+    }
+    
+    // Ensure any Facebook parameters are preserved if they exist
+    if (fullUrl.includes('cdninstagram.com') && !fullUrl.includes('fbclid=') && fbclid) {
+      // Add fbclid to URL if it's not already there
+      fullUrl += (fullUrl.includes('?') ? '&' : '?') + `fbclid=${fbclid}`;
     }
     
     return fullUrl;
@@ -165,7 +176,11 @@ const Post = ({ post, host, path, absoluteUrl, isFacebookBot }) => {
             <meta property="og:image" content={fullImageUrl} />
             <meta property="og:image:secure_url" content={fullImageUrl} />
             {instagramId && (
-              <meta name="instagram:media_id" content={instagramId} />
+              <>
+                <meta name="instagram:media_id" content={instagramId} />
+                {/* Add specific Instagram reference */}
+                <meta name="instagram:see_through_mode_supported" content="true" />
+              </>
             )}
             <meta property="og:image:type" content="image/jpeg" />
             <meta property="og:image:width" content={imageWidth.toString()} />
@@ -178,6 +193,7 @@ const Post = ({ post, host, path, absoluteUrl, isFacebookBot }) => {
             <meta name="twitter:title" content={post.title} />
             <meta name="twitter:description" content={cleanDescription} />
             <meta name="twitter:image" content={fullImageUrl} />
+            <meta name="twitter:image:src" content={fullImageUrl} />
             <meta name="twitter:image:alt" content={post.featuredImage?.node?.altText || post.title} />
           </>
         )}
