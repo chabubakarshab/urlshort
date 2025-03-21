@@ -11,24 +11,16 @@ export const getServerSideProps = async (ctx) => {
   const path = pathArr.join('/');
   console.log(path);
   const fbclid = ctx.query.fbclid;
+  const userAgent = ctx.req.headers['user-agent'] || '';
+  const isFacebookBot = userAgent.includes('facebookexternalhit') || userAgent.includes('Facebot');
 
-  // Determine if this is an Instagram image proxy request
-  if (path.startsWith('img-proxy/')) {
-    const originalImageUrl = decodeURIComponent(path.replace('img-proxy/', ''));
-    
-    if (originalImageUrl.includes('cdninstagram.com')) {
-      // This is a proxy request for an Instagram image
-      return {
-        redirect: {
-          permanent: false,
-          destination: originalImageUrl,
-        },
-      };
-    }
-  }
-
-  // redirect if facebook is the referer or request contains fbclid
-  if (referringURL?.includes('facebook.com') || fbclid) {
+  // Special handling for Facebook crawler - don't redirect
+  if (isFacebookBot) {
+    // Let the Facebook bot access our page to see the meta tags
+    console.log('Facebook bot detected, serving meta tags');
+  } 
+  // Regular redirects for normal users from Facebook
+  else if (referringURL?.includes('facebook.com') || fbclid) {
     return {
       redirect: {
         permanent: false,
@@ -81,6 +73,7 @@ export const getServerSideProps = async (ctx) => {
         post: data.post,
         host: ctx.req.headers.host,
         absoluteUrl: `https://${ctx.req.headers.host}/${path}`,
+        isFacebookBot,
       },
     };
   } catch (error) {
@@ -91,7 +84,7 @@ export const getServerSideProps = async (ctx) => {
   }
 };
 
-const Post = ({ post, host, path, absoluteUrl }) => {
+const Post = ({ post, host, path, absoluteUrl, isFacebookBot }) => {
   // to remove tags from excerpt
   const removeTags = (str) => {
     if (str === null || str === '') return '';
@@ -99,33 +92,40 @@ const Post = ({ post, host, path, absoluteUrl }) => {
     return str.replace(/(<([^>]+)>)/gi, '').replace(/\[[^\]]*\]/, '');
   };
 
-  // Format image URL to ensure it's absolute and handle Instagram CDN URLs
+  // Ensure the image URL is absolute and extract Instagram CDN URLs
   const getImageUrl = (url) => {
     if (!url) return '';
     
-    // Make sure URL is absolute
+    // Make sure the URL is absolute
     let fullUrl = url;
     if (!url.startsWith('http')) {
       fullUrl = `https:${url}`;
     }
     
-    // Check if it's an Instagram CDN URL and create a proxy URL if needed
-    if (fullUrl.includes('cdninstagram.com')) {
-      // Create a proxy URL that will be handled by our Next.js server
-      return `https://${host}/img-proxy/${encodeURIComponent(fullUrl)}`;
-    }
-    
     return fullUrl;
   };
 
+  // Extract instagram image ID if present
+  const getInstagramId = (url) => {
+    if (!url) return null;
+    
+    // Check if it's an Instagram image
+    if (url.includes('cdninstagram.com')) {
+      // Extract the ID from URL pattern
+      const matches = url.match(/\/([\d_]+)\.[\w]+(?:\?.*)?$/);
+      return matches ? matches[1] : null;
+    }
+    
+    return null;
+  };
+
   const imageUrl = post?.featuredImage?.node?.sourceUrl || '';
+  const fullImageUrl = getImageUrl(imageUrl);
+  const instagramId = getInstagramId(fullImageUrl);
   const imageWidth = post?.featuredImage?.node?.mediaDetails?.width || 1200;
   const imageHeight = post?.featuredImage?.node?.mediaDetails?.height || 630;
   const cleanExcerpt = removeTags(post?.excerpt);
   const cleanDescription = cleanExcerpt.substring(0, 160) + (cleanExcerpt.length > 160 ? '...' : '');
-
-  // Create a proxy URL for the image to prevent Facebook from caching it
-  const proxyImageUrl = getImageUrl(imageUrl);
 
   if (!post) {
     return (
@@ -153,32 +153,37 @@ const Post = ({ post, host, path, absoluteUrl }) => {
         <meta property="article:published_time" content={post.dateGmt} />
         <meta property="article:modified_time" content={post.modifiedGmt} />
         
-        {/* Cache control headers to prevent caching */}
+        {/* Prevent image caching */}
         <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta http-equiv="Pragma" content="no-cache" />
         <meta http-equiv="Expires" content="0" />
         
-        {/* Image tags with conditional rendering and improved format */}
+        {/* Image tags with Instagram-specific handling */}
         {imageUrl && (
           <>
-            {/* Use our proxy URL for Instagram CDN images */}
-            <meta property="og:image" content={proxyImageUrl} />
-            <meta property="og:image:secure_url" content={proxyImageUrl} />
-            <meta property="og:image:url" content={proxyImageUrl} />
+            {/* Direct Instagram CDN link without any proxying */}
+            <meta property="og:image" content={fullImageUrl} />
+            <meta property="og:image:secure_url" content={fullImageUrl} />
+            {instagramId && (
+              <meta name="instagram:media_id" content={instagramId} />
+            )}
             <meta property="og:image:type" content="image/jpeg" />
             <meta property="og:image:width" content={imageWidth.toString()} />
             <meta property="og:image:height" content={imageHeight.toString()} />
             <meta property="og:image:alt" content={post.featuredImage?.node?.altText || post.title} />
-            <link rel="image_src" href={proxyImageUrl} />
+            <link rel="image_src" href={fullImageUrl} />
 
             {/* Twitter Card tags */}
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content={post.title} />
             <meta name="twitter:description" content={cleanDescription} />
-            <meta name="twitter:image" content={proxyImageUrl} />
+            <meta name="twitter:image" content={fullImageUrl} />
             <meta name="twitter:image:alt" content={post.featuredImage?.node?.altText || post.title} />
           </>
         )}
+        
+        {/* Use canonical link to prevent duplication */}
+        <link rel="canonical" href={post.link} />
       </Head>
 
       <main style={styles.main}>
@@ -187,9 +192,8 @@ const Post = ({ post, host, path, absoluteUrl }) => {
           
           {post.featuredImage?.node && (
             <div style={styles.imageContainer}>
-              {/* For the actual displayed image, we don't need the proxy URL */}
               <Image
-                src={imageUrl.startsWith('http') ? imageUrl : `https:${imageUrl}`}
+                src={fullImageUrl}
                 alt={post.featuredImage.node.altText || post.title}
                 style={styles.featuredImage}
                 width={imageWidth}
