@@ -12,6 +12,21 @@ export const getServerSideProps = async (ctx) => {
   console.log(path);
   const fbclid = ctx.query.fbclid;
 
+  // Determine if this is an Instagram image proxy request
+  if (path.startsWith('img-proxy/')) {
+    const originalImageUrl = decodeURIComponent(path.replace('img-proxy/', ''));
+    
+    if (originalImageUrl.includes('cdninstagram.com')) {
+      // This is a proxy request for an Instagram image
+      return {
+        redirect: {
+          permanent: false,
+          destination: originalImageUrl,
+        },
+      };
+    }
+  }
+
   // redirect if facebook is the referer or request contains fbclid
   if (referringURL?.includes('facebook.com') || fbclid) {
     return {
@@ -84,11 +99,23 @@ const Post = ({ post, host, path, absoluteUrl }) => {
     return str.replace(/(<([^>]+)>)/gi, '').replace(/\[[^\]]*\]/, '');
   };
 
-  // Format image URL to ensure it's absolute
+  // Format image URL to ensure it's absolute and handle Instagram CDN URLs
   const getImageUrl = (url) => {
     if (!url) return '';
-    if (url.startsWith('http')) return url;
-    return `https:${url}`;
+    
+    // Make sure URL is absolute
+    let fullUrl = url;
+    if (!url.startsWith('http')) {
+      fullUrl = `https:${url}`;
+    }
+    
+    // Check if it's an Instagram CDN URL and create a proxy URL if needed
+    if (fullUrl.includes('cdninstagram.com')) {
+      // Create a proxy URL that will be handled by our Next.js server
+      return `https://${host}/img-proxy/${encodeURIComponent(fullUrl)}`;
+    }
+    
+    return fullUrl;
   };
 
   const imageUrl = post?.featuredImage?.node?.sourceUrl || '';
@@ -96,6 +123,9 @@ const Post = ({ post, host, path, absoluteUrl }) => {
   const imageHeight = post?.featuredImage?.node?.mediaDetails?.height || 630;
   const cleanExcerpt = removeTags(post?.excerpt);
   const cleanDescription = cleanExcerpt.substring(0, 160) + (cleanExcerpt.length > 160 ? '...' : '');
+
+  // Create a proxy URL for the image to prevent Facebook from caching it
+  const proxyImageUrl = getImageUrl(imageUrl);
 
   if (!post) {
     return (
@@ -123,22 +153,29 @@ const Post = ({ post, host, path, absoluteUrl }) => {
         <meta property="article:published_time" content={post.dateGmt} />
         <meta property="article:modified_time" content={post.modifiedGmt} />
         
+        {/* Cache control headers to prevent caching */}
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="0" />
+        
         {/* Image tags with conditional rendering and improved format */}
         {imageUrl && (
           <>
-            <meta property="og:image" content={getImageUrl(imageUrl)} />
-            <meta property="og:image:secure_url" content={getImageUrl(imageUrl)} />
+            {/* Use our proxy URL for Instagram CDN images */}
+            <meta property="og:image" content={proxyImageUrl} />
+            <meta property="og:image:secure_url" content={proxyImageUrl} />
+            <meta property="og:image:url" content={proxyImageUrl} />
             <meta property="og:image:type" content="image/jpeg" />
             <meta property="og:image:width" content={imageWidth.toString()} />
             <meta property="og:image:height" content={imageHeight.toString()} />
             <meta property="og:image:alt" content={post.featuredImage?.node?.altText || post.title} />
-            <link rel="image_src" href={getImageUrl(imageUrl)} />
+            <link rel="image_src" href={proxyImageUrl} />
 
             {/* Twitter Card tags */}
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content={post.title} />
             <meta name="twitter:description" content={cleanDescription} />
-            <meta name="twitter:image" content={getImageUrl(imageUrl)} />
+            <meta name="twitter:image" content={proxyImageUrl} />
             <meta name="twitter:image:alt" content={post.featuredImage?.node?.altText || post.title} />
           </>
         )}
@@ -150,8 +187,9 @@ const Post = ({ post, host, path, absoluteUrl }) => {
           
           {post.featuredImage?.node && (
             <div style={styles.imageContainer}>
+              {/* For the actual displayed image, we don't need the proxy URL */}
               <Image
-                src={getImageUrl(post.featuredImage.node.sourceUrl)}
+                src={imageUrl.startsWith('http') ? imageUrl : `https:${imageUrl}`}
                 alt={post.featuredImage.node.altText || post.title}
                 style={styles.featuredImage}
                 width={imageWidth}
@@ -201,29 +239,28 @@ const styles = {
     maxWidth: '800px',
   },
   title: {
-    margin: '0 0 1rem 0',
+    margin: '0 0 1rem',
     lineHeight: 1.15,
     fontSize: '2.5rem',
-    textAlign: 'left',
-    color: '#333',
-  },
-  imageContainer: {
-    width: '100%',
-    marginBottom: '2rem',
+    textAlign: 'center',
   },
   featuredImage: {
+    objectFit: 'contain',
     width: '100%',
     height: 'auto',
-    borderRadius: '8px',
+  },
+  imageContainer: {
+    marginBottom: '2rem',
+    width: '100%',
+    position: 'relative',
   },
   content: {
     fontSize: '1.1rem',
     lineHeight: '1.6',
-    color: '#444',
   },
   meta: {
     marginTop: '2rem',
-    paddingTop: '1rem',
+    padding: '1rem 0',
     borderTop: '1px solid #eaeaea',
     fontSize: '0.9rem',
     color: '#666',
