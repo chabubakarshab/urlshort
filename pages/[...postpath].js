@@ -101,11 +101,25 @@ const Post = ({ post, host, path, absoluteUrl, isFacebookBot, fbclid }) => {
   const getImageUrl = (url) => {
     if (!url) return '';
     
+    // Only allow scontent-lax.cdninstagram.com domain
+    if (!url.includes('scontent-lax.cdninstagram.com')) {
+      // If URL is from a different domain, try to find a version from scontent-lax
+      if (url.includes('cdninstagram.com') || url.includes('fbcdn.net')) {
+        // Return empty string if not from the allowed domain
+        console.log('Blocked image from non-allowed domain:', url);
+        return '';
+      }
+    }
+    
     // Make sure the URL is absolute
     let fullUrl = url;
     if (!url.startsWith('http')) {
       fullUrl = `https:${url}`;
     }
+    
+    // Force all URLs to use scontent-lax.cdninstagram.com
+    fullUrl = fullUrl.replace(/\/(scontent[^\-]*|scontent-[^.]+)\.cdninstagram\.com/, '/scontent-lax.cdninstagram.com');
+    fullUrl = fullUrl.replace(/\/(scontent|instagram)\.f[^.]+\.fna(\.fbcdn\.net)?/, '/scontent-lax.cdninstagram.com');
     
     // Ensure any Facebook parameters are preserved if they exist
     if (fullUrl.includes('cdninstagram.com') && !fullUrl.includes('fbclid=') && fbclid) {
