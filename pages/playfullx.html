@@ -1,0 +1,250 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html amp>
+   <head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
+     <meta charset="utf-8">
+     <meta name="viewport" content="width=device-width,minimum-scale=1">
+     <link href="https://fonts.googleapis.com/css?family=Open+Sans:700,300" rel="stylesheet" type="text/css">
+     <style amp-custom>#branch-sdk{position:fixed;bottom:0;left:0;right:0;}
+       body {
+         margin: 0;
+         word-wrap: break-word;
+         font-family: "Open Sans", Helvetica, serif;
+       }
+       /* ============ Portrait ============ */
+       .main-image {
+         width: 100%;
+         height: 250px;
+         height: 75vw;
+         background-size: cover;
+         background-position: top center;
+       }
+       #content-container {
+         box-sizing: border-box;
+         padding: 24px;
+         margin: 0 24px;
+         background-color: #fff;
+       }
+       .app-title {
+         font-size: 14px;
+         padding-bottom: 11px;
+         text-transform: uppercase;
+       }
+       .card-title {
+         font-size: 33px;
+         line-height: 36px;
+       }
+       .app-content {
+         padding-top: 10px;
+         padding-bottom: 100px;
+         font-size: 20px;
+       }
+       .input-wrapper {
+         position: fixed;
+         bottom: 0;
+         left: 0;
+         width: 100%;
+         height: 110px;
+         background-color: #fff;
+         box-shadow: 0px -20px 20px -8px rgba(255,255,255,1);
+       }
+       .input-container {
+         width: 100%;
+         padding: 0 24px;
+         text-align: center;
+         box-sizing: border-box;
+       }
+       .form-get-the-app {
+         display: -webkit-box;
+         display: flex;
+         text-align: center;
+         padding-top: 10px;
+         border-top: 2px solid #cecece;
+         min-height: 300px;
+       }
+       .input-label {
+         padding: 4px 10px;
+         font-size: 13px;
+         overflow: hidden;
+         word-wrap: break-word;
+         text-align: center;
+       }
+       .app-icon {
+         width: 62px;
+         height: 62px;
+         line-height: 62px;
+         background-size: 100% auto;
+       }
+       .cta-button {
+         -webkit-box-flex: 1;
+         flex-grow: 1;
+         height: 62px;
+         line-height: 62px;
+         background-color: #444;
+         border-radius: 2px;
+         font-size: 20px;
+         padding: 0 20px;
+         margin-left: 10px;
+         color: #fff;
+         text-align: center;
+         text-decoration: none;
+         display: block;
+       }
+       /* No data (portrait) */
+       @media only screen and (orientation: portrait) {
+         .card--no-data .main-image {
+           background-image: url("http://s3-us-west-1.amazonaws.com/branch-assets/b_stripes-small.png");
+           background-size: auto;
+           background-position: top center;
+           background-repeat: repeat;
+           height: 190px;
+         }
+         .card--no-data > .app-icon {
+           position: absolute;
+           top: 160px;
+           left: 34px;
+         }
+         .card--no-data #content-container {
+           margin-top: 20px;
+         }
+         }
+         @media screen /* >= iPhone 5 */
+         and (min-device-width: 321px) {
+         .input-label {
+           font-size: 14px;
+         }
+       }
+       @media only screen /* >= iPhone 6 */
+         and (min-device-width: 375px)
+         and (orientation: portrait) {
+         .main-image {
+           height: 300px;
+           height: 80vw;
+         }
+         .app-content {
+           padding-bottom: 120px;
+         }
+         .input-wrapper {
+           height: 115px;
+         }
+       }
+       @media only screen /* >= iPhone 6+ */
+       and (min-device-width: 414px)
+       and (orientation: portrait) {
+         .main-image {
+           height: 390px;
+           height: 95vw;
+         }
+       }
+       /* ============ Landscape ============ */
+       @media only screen and (orientation: landscape){
+         .main-image {
+           position: fixed;
+           height: 100%;
+           height: 100vh;
+           width: 50%;
+         }
+         .input-wrapper {
+           right: 0;
+           left: auto;
+           width: 50%;
+         }
+         #content-container {
+           float: left;
+           width: 50%;
+           margin-left: 50%;
+         }
+         .input-wrapper {
+           height: 108px;
+         }
+         .app-content {
+           padding-bottom: 110px;
+         }
+         .form-get-the-app {
+           padding-top: 8px;
+         }
+         .input-container {
+           left: 50%;
+         }
+         .cta-button {
+           height: 44px;
+           line-height: 44px;
+           padding: 0 5px;
+           margin-left: 50px;
+         }
+         .app-icon {
+           width: 44px;
+           height: 44px;
+         }
+         /* No data (landscape) */
+         .card--no-data .main-image {
+           height: 100%;
+         }
+         .card--no-data > .app-icon {
+           display: none;
+         }
+         .card--no-data #content-container {
+           margin-top: 0;
+         }
+       }
+       @media only screen /* >= iPhone 6 */
+       and (min-device-width: 645px)
+       and (orientation: landscape) {
+         .form-get-the-app {
+           padding-top: 8px;
+         }
+         .cta-button {
+           height: 62px;
+           line-height: 62px;
+           padding: 0 20px;
+           margin-left: 70px;
+         }
+         .app-icon {
+           width: 62px;
+           height: 62px;
+           top: -2px;
+         }
+       }
+       /* Reusables */
+       .text-bold {
+         font-weight: 700
+       }
+       .text-light {
+         font-weight: 300;
+       }
+       .cta-button--no-app-icon {
+         margin-left: 0;
+       }
+     </style>
+       <link rel="apple-touch-icon" href="//scontent-lax.cdninstagram.com/v/t1.15752-9/482674634_655375550271958_524182419503878274_n.png?stp=dst-png_s640x640&amp;_nc_cat=102&amp;ccb=1-7&amp;_nc_sid=0024fc&amp;_nc_eui2=AeFy7DtUlGrDhFguS7kZSal2moy1TYDw8uCajLVNgPDy4OJVHLxfjRgBLEk4Lvs926mh_BC13_AJ6oj6roKvuORP&amp;_nc_ohc=pWfvKj0JSCkAXfvbXbs&amp;_nc_ht=scontent-lax.cdninstagram.com&amp;oh=03_AdQEAuXZr00-BcmloXJ0JMdC-Sc8Qn9cc2MwR4I8Q7Xq8Q&amp;oe=655E9E3C">
+       <meta property="og:image" content="//scontent-lax.cdninstagram.com/v/t1.15752-9/482674634_655375550271958_524182419503878274_n.png?stp=dst-png_s640x640&amp;_nc_cat=102&amp;ccb=1-7&amp;_nc_sid=0024fc&amp;_nc_eui2=AeFy7DtUlGrDhFguS7kZSal2moy1TYDw8uCajLVNgPDy4OJVHLxfjRgBLEk4Lvs926mh_BC13_AJ6oj6roKvuORP&amp;_nc_ohc=pWfvKj0JSCkQ7kNvgFhFjYd&amp;_nc_oc=AdgyCkG2R--T8cs9hyotBjQVxlV0NaLJCbuH4fDhiBv3gLYT01VvwdoWhmpJ77qgLcg&amp;_nc_ad=z-m&amp;_nc_cid=0&amp;_nc_zt=23&amp;_nc_ht=scontent.fhex4-1.fna&amp;oh=03_Q7cD1wHdBOsow7TdDU4GQSylzwapzcUTD6lETLudqSdgAna-Dw&amp;oe=67F4C27C&amp;fbclid=IwAR2gkkz5iVO6yc1lAC2rb_nT7qdFJhtvJPPNSdkCKhznqooZjKyyxZSPFeE">
+         <meta name="twitter:image:src" content="//scontent-lax.cdninstagram.com/v/t1.15752-9/482674634_655375550271958_524182419503878274_n.png?stp=dst-png_s640x640&amp;_nc_cat=102&amp;ccb=1-7&amp;_nc_sid=0024fc&amp;_nc_eui2=AeFy7DtUlGrDhFguS7kZSal2moy1TYDw8uCajLVNgPDy4OJVHLxfjRgBLEk4Lvs926mh_BC13_AJ6oj6roKvuORP&amp;_nc_ohc=pWfvKj0JSCkQ7kNvgFhFjYd&amp;_nc_oc=AdgyCkG2R--T8cs9hyotBjQVxlV0NaLJCbuH4fDhiBv3gLYT01VvwdoWhmpJ77qgLcg&amp;_nc_ad=z-m&amp;_nc_cid=0&amp;_nc_zt=23&amp;_nc_ht=scontent.fhex4-1.fna&amp;oh=03_Q7cD1wHdBOsow7TdDU4GQSylzwapzcUTD6lETLudqSdgAna-Dw&amp;oe=67F4C27C&amp;fbclid=IwAR2gkkz5iVO6yc1lAC2rb_nT7qdFJhtvJPPNSdkCKhznqooZjKyyxZSPFeE">
+       <title>?? VIDOS ??</title>
+       <meta property="og:title" content="?? VIDOS ??">
+       <meta property="og:description" content="??Téchargez GRATUITEMENT le lien de cette vido sur FACEBOOK OU INSTAGRAM et d'autres applications disponibles??">
+       <meta property="fb:app_id" content="447050222104724">
+       <meta property="og:type" content="website">
+       <meta name="twitter:card" content="summary_large_image">
+       <meta name="twitter:app:country" content="US">
+       <meta name="twitter:title" content="VIDOS - Download Now">
+       <meta name="twitter:description" content="??Téchargez GRATUITEMENT le lien de cette vido sur FACEBOOK OU INSTAGRAM et d'autres applications disponibles??">
+       <meta name="twitter:site" content="@vidosapp">
+   <script async src="https://cdn.ampproject.org/v0.js"></script>
+   </head>
+   <body>
+      <div id="app-banner-root">
+        <div class="card">
+          <div class="main-image" style="background-image: url(//scontent-lax.cdninstagram.com/v/t1.15752-9/482674634_655375550271958_524182419503878274_n.png?stp=dst-png_s640x640&amp;_nc_cat=102&amp;ccb=1-7&amp;_nc_sid=0024fc&amp;_nc_eui2=AeFy7DtUlGrDhFguS7kZSal2moy1TYDw8uCajLVNgPDy4OJVHLxfjRgBLEk4Lvs926mh_BC13_AJ6oj6roKvuORP&amp;_nc_ohc=pWfvKj0JSCkQ7kNvgFhFjYd&amp;_nc_oc=AdgyCkG2R--T8cs9hyotBjQVxlV0NaLJCbuH4fDhiBv3gLYT01VvwdoWhmpJ77qgLcg&amp;_nc_ad=z-m&amp;_nc_cid=0&amp;_nc_zt=23&amp;_nc_ht=scontent.fhex4-1.fna&amp;oh=03_Q7cD1wHdBOsow7TdDU4GQSylzwapzcUTD6lETLudqSdgAna-Dw&amp;oe=67F4C27C);"></div>
+          <div id="content-container">
+            <div class="app-title text-bold">89F54594F598H4-3</div>
+            <h1 class="card-title text-bold">?? VIDOS ??</h1>
+            <div class="app-content text-light">??Téchargez GRATUITEMENT le lien de cette vido sur FACEBOOK OU INSTAGRAM et d'autres applications disponibles??</div>
+          </div>
+        </div>
+      </div>
+   </body>
+</html>
